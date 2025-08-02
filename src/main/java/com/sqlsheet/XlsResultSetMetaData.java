@@ -118,12 +118,25 @@ public class XlsResultSetMetaData implements ResultSetMetaData {
                             typeCode = Types.NULL;
                             break;
                         case FORMULA:
-                            try {
-                                cell.getStringCellValue();
-                                typeCode = Types.VARCHAR;
-                            } catch (Exception e) {
-                                cell.getNumericCellValue();
-                                typeCode = Types.DOUBLE;
+                            switch (cell.getCachedFormulaResultType()) {
+                                case NUMERIC:
+                                    cell.getNumericCellValue();
+                                    typeCode = Types.DOUBLE;
+                                    break;
+                                case BOOLEAN:
+                                    typeCode = Types.BOOLEAN;
+                                    break;
+                                case ERROR:
+                                    throw new RuntimeException(
+                                            "The ExcelType ( ERROR ) is not supported - Cell ("
+                                                    + resultset.getRow()
+                                                    + ","
+                                                    + columnId
+                                                    + ")");
+                                default:
+                                    cell.getStringCellValue();
+                                    typeCode = Types.VARCHAR;
+                                    break;
                             }
                             break;
                         case ERROR:
